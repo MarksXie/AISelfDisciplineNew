@@ -263,10 +263,12 @@ fun MainAppContainer() {
 @Composable
 fun AboutAppDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
+    var showChangelog by remember { mutableStateOf(false) }
+
     val (versionName, versionCode) = remember(context) {
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            val vName = pInfo.versionName ?: "1.3"
+            val vName = pInfo.versionName ?: "1.4"
             val vCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 pInfo.longVersionCode.toString()
             } else {
@@ -275,8 +277,14 @@ fun AboutAppDialog(onDismiss: () -> Unit) {
             }
             Pair(vName, vCode)
         } catch (e: Exception) {
-            Pair("1.3", "4")
+            Pair("1.4", "5")
         }
+    }
+
+    if (showChangelog) {
+        com.example.myapplication.ui.components.ChangelogDialog(
+            onDismiss = { showChangelog = false }
+        )
     }
 
     AlertDialog(
@@ -334,7 +342,50 @@ fun AboutAppDialog(onDismiss: () -> Unit) {
                     )
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // 查看版本更新日志按钮
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = WarmSurfaceContainer,
+                    border = BorderStroke(1.dp, WarmBorder),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { showChangelog = true }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.AutoAwesome,
+                                contentDescription = null,
+                                tint = TerracottaPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "查看版本更新日志 (Release Notes)",
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = WarmTextPrimary
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Rounded.ChevronRight,
+                            contentDescription = "打开更新日志",
+                            tint = WarmTextMuted,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // 核心理念卡片
                 Surface(

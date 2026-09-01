@@ -25,6 +25,9 @@ class StatisticsViewModel(
     private val _uiState = MutableStateFlow(StatsUiState())
     val uiState: StateFlow<StatsUiState> = _uiState.asStateFlow()
 
+    // 缓存最新的报告字典快照，供 triggerRefresh 同步查询
+    private var latestCachedReports: Map<String, com.example.myapplication.data.model.StatsReport> = emptyMap()
+
     init {
         // 监听并组合底层数据流
         viewModelScope.launch {
@@ -60,6 +63,8 @@ class StatisticsViewModel(
         cachedReports: Map<String, com.example.myapplication.data.model.StatsReport>,
         clearTs: Long
     ) {
+        // 更新快照，供 triggerRefresh 使用
+        latestCachedReports = cachedReports
         val currentState = _uiState.value
         val startMs = currentState.startMs
         val endMs = currentState.endMs
@@ -138,28 +143,31 @@ class StatisticsViewModel(
     }
 
     fun refreshUsageStats(context: Context) {
-        val hasPermission = UsageStatsHelper.hasUsageStatsPermission(context)
+        val appContext = context.applicationContext
         val startMs = _uiState.value.startMs
         val endMs = _uiState.value.endMs
 
-        val topApps = if (hasPermission) {
-            UsageStatsHelper.queryAppUsage(context, startMs, endMs).take(5)
-        } else {
-            emptyList()
-        }
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val hasPermission = UsageStatsHelper.hasUsageStatsPermission(appContext)
+            val topApps = if (hasPermission) {
+                UsageStatsHelper.queryAppUsage(appContext, startMs, endMs).take(5)
+            } else {
+                emptyList()
+            }
 
-        val totalScreenTimeMs = if (hasPermission) {
-            UsageStatsHelper.getTotalScreenTime(context, startMs, endMs)
-        } else {
-            0L
-        }
+            val totalScreenTimeMs = if (hasPermission) {
+                UsageStatsHelper.getTotalScreenTime(appContext, startMs, endMs)
+            } else {
+                0L
+            }
 
-        _uiState.update { state ->
-            state.copy(
-                hasUsageStatsPermission = hasPermission,
-                topApps = topApps,
-                totalScreenTimeMs = totalScreenTimeMs
-            )
+            _uiState.update { state ->
+                state.copy(
+                    hasUsageStatsPermission = hasPermission,
+                    topApps = topApps,
+                    totalScreenTimeMs = totalScreenTimeMs
+                )
+            }
         }
     }
 
@@ -248,13 +256,18 @@ class StatisticsViewModel(
         val rejectedCount = totalCount - approvedCount
         val passRate = if (totalCount > 0) (approvedCount * 100 / totalCount) else 0
 
+        // 根据当前周期 key 从缓存字典中查找对应的报告（修复：翻页后报告未跟随切换的 bug）
+        val currentPeriodKey = StatsPeriodHelper.getPeriodKey(state.selectedPeriodType, state.startMs)
+        val currentReport = latestCachedReports[currentPeriodKey]
+
         _uiState.update {
             it.copy(
                 visibleRecords = visibleRecords,
                 totalCount = totalCount,
                 approvedCount = approvedCount,
                 rejectedCount = rejectedCount,
-                passRate = passRate
+                passRate = passRate,
+                currentReport = currentReport
             )
         }
     }

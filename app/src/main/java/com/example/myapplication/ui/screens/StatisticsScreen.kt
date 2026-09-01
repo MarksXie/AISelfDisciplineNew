@@ -38,9 +38,11 @@ fun StatisticsScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // 进入页面时刷新一次系统使用时间统计
-    LaunchedEffect(Unit) {
-        viewModel.refreshUsageStats(context)
+    // 当统计时间区间（日期、翻页、周期类型）变化时，自动重新查询该区间内的系统使用时长
+    LaunchedEffect(uiState.startMs, uiState.endMs) {
+        if (uiState.startMs > 0 && uiState.endMs > 0) {
+            viewModel.refreshUsageStats(context)
+        }
     }
 
     Column(

@@ -6,13 +6,14 @@
 
 一款基于 **Android 原生平台** 打造的端云双引擎 **AI 意图审查与防沉迷自律应用**。
 
+[![Version](https://img.shields.io/badge/Version-v1.4-orange?style=flat-square)](CHANGELOG.md)
 [![Platform](https://img.shields.io/badge/Platform-Android%2014%2B%20(API%2034~37)-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0%2B-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose%20%2F%20Material%203-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Native Core](https://img.shields.io/badge/Native%20Engine-C%2B%2B20%20%2F%20llama.cpp-00599C?style=flat-square&logo=c%2B%2B&logoColor=white)](https://github.com/ggerganov/llama.cpp)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-[功能特性](#-核心功能特性) • [技术架构](#-技术架构与工作原理) • [双引擎配置](#-ai-双引擎配置指南) • [构建指南](#-源码编译与运行) • [常见问题](#-常见问题-faq)
+[功能特性](#-核心功能特性) • [技术架构](#-技术架构与工作原理) • [双引擎配置](#-ai-双引擎配置指南) • [构建指南](#-源码编译与运行) • [更新日志](CHANGELOG.md) • [常见问题](#-常见问题-faq)
 
 </div>
 
@@ -245,7 +246,9 @@ app/src/main/
 │   │   ├── model/
 │   │   │   ├── AIModels.kt              # 决策枚举、服务商配置、人格 Profile 数据类
 │   │   │   ├── AppInfo.kt               # 已安装应用信息模型
-│   │   │   └── ApprovalRecord.kt        # 审批历史记录数据类
+│   │   │   ├── ApprovalRecord.kt        # 审批历史记录数据类
+│   │   │   ├── ChangelogModels.kt       # 版本更新日志与历史变更数据模型
+│   │   │   └── StatisticsModels.kt      # 自律统计、AI 复盘报告数据模型
 │   │   └── repository/
 │   │       ├── AppLockRepository.kt     # DataStore 偏好存储与响应式数据源
 │   │       └── WhitelistSessionManager.kt # 限时放行白名单会话倒计时管理
@@ -254,20 +257,25 @@ app/src/main/
 │   ├── service/                         # 系统服务层
 │   │   ├── AppLockAccessibilityService.kt # 无障碍前台应用拦截服务
 │   │   ├── KeepAliveForegroundService.kt  # Android 14 规范前台保活服务
-│   │   └── OverlayWindowManager.kt        # 全屏拦截悬浮窗控制器
+│   │   ├── OverlayWindowManager.kt        # 全屏拦截悬浮窗控制器
+│   │   └── StatsReportWorker.kt           # 后台定时自律复盘报告 Worker
 │   ├── ui/                              # Compose UI 层
+│   │   ├── components/
+│   │   │   └── ChangelogDialog.kt       # 版本演进与更新日志对话框组件
 │   │   ├── overlay/
 │   │   │   ├── DurationDialPicker.kt    # 刻度转盘使用时长选择器
 │   │   │   └── InterceptOverlayContent.kt # 全屏拦截对话审批弹窗
 │   │   ├── screens/
 │   │   │   ├── AISettingsScreen.kt      # AI 双引擎与审查官人格设置页
 │   │   │   ├── BlacklistScreen.kt       # 黑名单应用管理与规则定制页
-│   │   │   ├── HistoryScreen.kt         # 审批历史与拦截数据统计页
 │   │   │   ├── HomeScreen.kt            # 守护主页看板
-│   │   │   └── PermissionGuideScreen.kt # 系统必要权限授权引导页
-│   │   └── theme/                       # Material 3 主题与配色
+│   │   │   ├── PermissionGuideScreen.kt # 系统必要权限授权引导页
+│   │   │   ├── StatisticsScreen.kt      # 自律统计复盘与流水看板
+│   │   │   └── stats/                   # 统计分析子模块 (图表/报告/卡片)
+│   │   └── theme/                       # Material 3 陶土奶咖主题与配色
 │   └── util/
-│       └── DeviceInfoHelper.kt          # 设备信息与系统状态工具类
+│       ├── DeviceInfoHelper.kt          # 设备信息与系统状态工具类
+│       └── StatsPeriodHelper.kt         # 统计周期计算与级联聚合工具
 └── res/                                 # 资源目录 (图标、布局、多语言、配置)
 ```
 
